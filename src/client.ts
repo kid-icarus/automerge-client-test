@@ -4,10 +4,6 @@ import { next as A } from '@automerge/automerge'
 import { Repo } from "@automerge/automerge-repo"
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
 import assert from "assert";
-// @ts-ignore
-//import ihe2 from './ihe2.json' with { type: 'json' };
-
-import ihe2 from './ihe2.json' assert { type: 'json' };
 
 const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const stringWith100Characters = (characters + characters).slice(0, 100);
@@ -30,12 +26,6 @@ const testJson = {
 };
 const testDoc = A.from(testJson);
 
-const iheDoc = A.from(ihe2);
-
-// console.log(iheDoc);
-console.log(ihe2.productName);
-console.log(iheDoc.productName);
-
 console.log(`called .from`);
 
 console.log(new Date().toLocaleString());
@@ -56,7 +46,7 @@ console.log(new Date().toLocaleString());
 
 console.log(`creating doc`);
 
-const handle1 = repo1.create(iheDoc);
+const handle1 = repo1.create(testDoc);
 
 handle1.change((doc) => {
   // @ts-ignore
@@ -106,10 +96,6 @@ console.log(new Date().toLocaleString());
 // console.log(docFoundValue);
 
 console.log(new Date().toLocaleString());
-
-// @ts-ignore
-// const productName = docFound.productName;
-// console.log(`Doc found with productName ${productName}`);
 
 // @ts-ignore
 const testString = docFound.test;
