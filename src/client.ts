@@ -30,11 +30,10 @@ const repo2 = new Repo({
 const testJson = {
   stringArray: stringArray
 };
-const testDoc = A.from(testJson);
 
 console.log(`${new Date().toLocaleString()} created test doc locally`);
 
-const handle1 = repo1.create(testDoc);
+const handle1 = repo1.create(testJson);
 
 handle1.change((doc) => {
   // @ts-ignore
