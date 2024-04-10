@@ -1,20 +1,11 @@
-import { next as A } from '@automerge/automerge'
+import { next as A, from as LegacyFrom } from '@automerge/automerge'
 import { Repo } from "@automerge/automerge-repo"
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
 import assert from "assert";
+import file from './file.json' with { type: 'json' };
 
-const sizeInMBToTest = 5;
-const arrayLength = sizeInMBToTest * 1_000_000 / 100;
-const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const stringWith100Characters = (characters + characters).slice(0, 100);
-const stringArray: string[] = new Array(arrayLength).fill(stringWith100Characters);
-const sizeInBytes = new Blob(stringArray).size;
-const sizeInMB = sizeInBytes / 1_000_000;
 
-console.log(new Date().toLocaleString());
-console.log(`sizeInBytes: ${sizeInBytes}`);
-console.log(`sizeInMB: ${sizeInMB}`);
-
+console.log(process.pid);
 console.log(`${new Date().toLocaleString()} websocket test client starting`);
 
 const PORT = 3030;
@@ -27,42 +18,76 @@ const repo2 = new Repo({
   network: [new BrowserWebSocketClientAdapter(`ws://localhost:${PORT}`)],
 });
 
-const testJson = {
-  stringArray: stringArray
-};
+const mapProductToAutomerge = (value: any) => {
+  if (value === null || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return new A.RawString(value);
+  }
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return value.map(mapProductToAutomerge);
+    }
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]) => [key, mapProductToAutomerge(value)])
+    );
+  }
+}
 
-console.log(`${new Date().toLocaleString()} created test doc locally`);
+// This creates a document where all strings are instances of A.RawString
+function createRawStringDoc() {
+  console.time('create raw string local');
+  const doc = A.init<Record<string, unknown>>();
+  const newDoc = A.change(doc, (doc: any) => {
+    Object.assign(doc, mapProductToAutomerge(file));
+  })
+  console.timeEnd('create raw string local');
 
-const handle1 = repo1.create(testJson);
+  console.time('update doc');
+  const handle1 = repo1.create();
+  handle1.update(() => newDoc)
+  console.timeEnd('update doc');
+  return handle1;
+}
 
-handle1.change((doc) => {
-  // @ts-ignore
-  doc.testString = 'test';
-});
+// This creates a document where all strings are the new text CRDT
+function createFrom() {
+  console.time('create from');
+  const handle1 = repo1.create(file);
+  console.timeEnd('create from');
+  return handle1;
+}
 
-console.log(`${new Date().toLocaleString()} created test doc in repo`);
+// This creates a document where all strings instancesof of A.Text
+function createLegacyFrom() {
+  console.timeEnd('create legacy from');
+  const doc = LegacyFrom(file as Record<string, unknown>);
+  const handle1 = repo1.create();
+  handle1.update(() => doc)
+  console.timeEnd('create legacy from');
+  return handle1;
+}
 
+
+const handle1 = createRawStringDoc();
+// const handle1 = createFrom();
+
+console.time('wait');
 // wait to give the server time to sync the document
 // @ts-ignore
 await new Promise((resolve) => setTimeout(resolve, 1000))
-
-console.log(`${new Date().toLocaleString()} waited for 1000ms`);
+console.timeEnd('wait');
 
 // withholds existing documents from new peers until they request them
 assert.equal(Object.keys(repo2.handles).length, 0);
 
-console.log(`${new Date().toLocaleString()} calling repo2.find`);
+console.time('sync: recv');
 const handle1found = repo2.find(handle1.url);
-console.log(`${new Date().toLocaleString()} called repo2.find`);
-
 assert.equal(Object.keys(repo2.handles).length, 1);
+// @ts-ignore
+await handle1found.doc(["ready"]);
+console.timeEnd('sync: recv');
 
 // @ts-ignore
-const docFound = await handle1found.doc(["ready"]);
-
-// @ts-ignore
-const testString = docFound.testString;
-console.log(`${new Date().toLocaleString()} doc found with testString value: ${testString}`);
-
-console.log(`Exiting!`);
 process.exit();

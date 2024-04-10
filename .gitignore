@@ -131,3 +131,5 @@ dist
 
 # IntelliJ IDEA IDE
 .idea/
+file.json
+.DS_Store
