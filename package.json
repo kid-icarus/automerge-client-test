@@ -12,8 +12,8 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.1.10",
-    "@automerge/automerge-repo": "^1.1.0",
+    "@automerge/automerge": "^2.1.13",
+    "@automerge/automerge-repo": "^1.1.5",
     "@automerge/automerge-repo-network-websocket": "^1.1.0",
     "ws": "^8.7.0"
   },
