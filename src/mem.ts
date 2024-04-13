@@ -1,5 +1,4 @@
 import file from './file.json' with { type: 'json' };
-import assert from 'assert';
 import process from "node:process";
 import { next as A } from '@automerge/automerge'
 
@@ -7,7 +6,7 @@ function logMemoryUsage(): void {
   console.log('memory usage:');
   const memoryUsage = process.memoryUsage();
   for (const [key, value] of Object.entries(memoryUsage)) {
-    console.log(`${key}: ${value/1000000}MB`);
+    console.log(`${key}: ${value/1_000_000}MB`);
   }
   console.log();
 }
@@ -28,26 +27,14 @@ const mapProductToAutomerge = (value: any) => {
     );
   }
 }
-const data = mapProductToAutomerge(file);
-for (const [key, value] of Object.entries(data.workflows)) {
-  // @ts-ignore
-  assert(value.id instanceof A.RawString);
-}
 
-console.log(`${new Date().toLocaleString()}`);
-logMemoryUsage();
+let doc = A.init();
+A.change(doc, 'create data', (doc: any) => {
+  Object.assign(doc, mapProductToAutomerge(file));
+})
 
-for (let i = 0; i < 10; i++) {
-  console.time(`create doc from data ${i}`);
-  const doc = A.init();
-  A.change(doc, 'create data', (doc: any) => {
-    Object.assign(doc, data);
-  })
-  console.timeEnd(`create doc from data ${i}`);
+doc = null
+
+setInterval(() => {
   logMemoryUsage();
-}
-
-console.log(`${new Date().toLocaleString()}`);
-
-console.log(`Exiting!`);
-process.exit();
+}, 1000);

@@ -71,7 +71,7 @@ function createLegacyFrom() {
 
 
 const handle1 = createRawStringDoc();
-// const handle1 = createFrom();
+// const handle1 = createLegacyFrom();
 
 console.time('wait');
 // wait to give the server time to sync the document

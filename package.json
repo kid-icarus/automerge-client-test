@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "dist/client.js",
   "scripts": {
-    "client": "./node_modules/typescript/bin/tsc && node dist/client.js",
-    "mem": "./node_modules/typescript/bin/tsc && node dist/mem.js",
+    "client": "npm run build && node dist/client.js",
+    "mem": "npm run build && node dist/mem.js",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
